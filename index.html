@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#03040b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Jogo idle de defesa espacial: monte defesas orbitais e proteja o planeta de ondas infinitas.">
+  <title>Defesa Orbital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Exo+2:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="page-bg"></canvas>
+
+  <div id="stage">
+    <canvas id="game"></canvas>
+
+    <!-- HUD superior -->
+    <header id="hud">
+      <div class="hud-top">
+        <button id="btn-pause" class="hud-btn" aria-label="Pausar">
+          <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+        <div class="hud-wave"><small>ONDA</small><b id="hud-wave">0</b></div>
+        <div id="hud-coins" class="hud-coins"><i class="coin"></i><b id="hud-coins-val">0</b></div>
+        <button id="btn-mute" class="hud-btn" aria-label="Som">
+          <svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke-width="2" stroke-linecap="round"/><path class="cross" d="M16 9l6 6M22 9l-6 6" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button id="btn-speed" class="hud-btn hud-speed" aria-label="Velocidade">1x</button>
+      </div>
+      <div class="hp" aria-label="Vida do planeta">
+        <div id="hud-hp-fill" class="hp-fill"></div>
+        <span id="hud-hp-text" class="hp-text">1000 / 1000</span>
+      </div>
+      <div id="wave-info" class="wave-info"></div>
+      <div class="wave-actions">
+        <button id="btn-call" class="call-btn hidden">CHAMAR ONDA <span class="cost">+<i class="coin"></i><b id="call-value">0</b></span></button>
+        <button id="btn-risk" class="call-btn risk hidden">DESAFIO <span class="cost">×3</span></button>
+      </div>
+      <div id="toast" class="toast"></div>
+      <div id="boss-bar" class="boss-bar hidden">
+        <span id="boss-name">NAU-MÃE</span>
+        <div class="boss-track"><div id="boss-fill" class="boss-fill"></div></div>
+      </div>
+    </header>
+
+    <div id="banner" class="banner"></div>
+
+    <!-- Habilidades do planeta (botões criados pela HUD) -->
+    <div id="abilities" class="abilities"></div>
+
+    <!-- Painel contextual do slot -->
+    <section id="panel" class="panel"></section>
+
+    <div id="fps" class="fps hidden"></div>
+
+    <!-- Telas -->
+    <div id="screen-menu" class="screen">
+      <div class="card">
+        <h1 class="title">DEFESA<span>ORBITAL</span></h1>
+        <p class="subtitle">Proteja o planeta das ondas infinitas de asteroides e naves.</p>
+        <div class="stat-row">
+          <div><small>RECORDE</small><b id="menu-record">0</b></div>
+          <div><small>NÚCLEOS</small><b class="cores-val"><i class="core"></i><span id="menu-cores">0</span></b></div>
+        </div>
+        <div id="threat-row" class="threat-row hidden">
+          <button id="threat-dec" class="hud-btn" aria-label="Menos ameaça">‹</button>
+          <div><small>NÍVEL DE AMEAÇA</small><b id="threat-val">0</b><span id="threat-desc"></span></div>
+          <button id="threat-inc" class="hud-btn" aria-label="Mais ameaça">›</button>
+        </div>
+        <button id="btn-play" class="btn primary">JOGAR</button>
+        <button id="btn-menu-lab" class="btn">LABORATÓRIO</button>
+        <p class="hint">Toque nos slots ao redor do planeta para construir e melhorar defesas. Elas atacam sozinhas.</p>
+      </div>
+    </div>
+
+    <div id="screen-paused" class="screen hidden">
+      <div class="card">
+        <h2>PAUSADO</h2>
+        <div id="pause-cards" class="owned-cards"></div>
+        <div id="pause-rules" class="owned-cards"></div>
+        <div id="pause-missions" class="missions"></div>
+        <button id="btn-resume" class="btn primary">CONTINUAR</button>
+        <button id="btn-restart" class="btn">REINICIAR</button>
+        <button id="btn-menu" class="btn ghost">MENU INICIAL</button>
+      </div>
+    </div>
+
+    <div id="screen-choice" class="screen hidden">
+      <div class="card cards-card">
+        <h2>ESCOLHA UMA MELHORIA</h2>
+        <p id="choice-sub" class="subtitle">Onda concluída</p>
+        <div id="choice-list" class="choice-list"></div>
+        <button id="btn-reroll" class="btn ghost">TROCAR OPÇÕES</button>
+      </div>
+    </div>
+
+    <div id="screen-lab" class="screen hidden">
+      <div class="card lab-card">
+        <h2>LABORATÓRIO</h2>
+        <div class="cores-line"><i class="core"></i><b id="lab-cores">0</b> núcleos</div>
+        <div id="lab-tabs" class="tabs"></div>
+        <p id="lab-hint" class="hint"></p>
+        <div id="lab-list" class="lab-list scroll"></div>
+        <button id="btn-lab-back" class="btn primary">VOLTAR</button>
+        <button id="btn-lab-reset" class="btn ghost small">Reiniciar progresso</button>
+        <div id="lab-preview" class="preview scroll hidden"></div>
+      </div>
+    </div>
+
+    <div id="screen-over" class="screen hidden">
+      <div class="card over-card scroll">
+        <h2 class="danger">PLANETA DESTRUÍDO</h2>
+        <div class="big-wave"><small>Onda alcançada</small><b id="over-wave">0</b></div>
+        <div id="over-new" class="new-record hidden">NOVO RECORDE!</div>
+        <div class="stat-row">
+          <div><small>RECORDE</small><b id="over-record">0</b></div>
+          <div><small>NÚCLEOS</small><b class="cores-val">+<i class="core"></i><span id="over-cores">0</span></b></div>
+        </div>
+        <div id="over-threat" class="new-record hidden"></div>
+        <div id="over-stats" class="over-stats"></div>
+        <div id="over-damage" class="dmg-list"></div>
+        <button id="btn-again" class="btn primary">JOGAR DE NOVO</button>
+        <button id="btn-over-lab" class="btn">LABORATÓRIO</button>
+        <button id="btn-over-menu" class="btn ghost">MENU INICIAL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ordem importa: config e manifesto primeiro, main por último -->
+  <script src="js/config.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/core/math.js"></script>
+  <script src="js/core/events.js"></script>
+  <script src="js/core/pool.js"></script>
+  <script src="js/core/loop.js"></script>
+  <script src="js/core/meta.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/entities/planet.js"></script>
+  <script src="js/entities/particle.js"></script>
+  <script src="js/entities/slot.js"></script>
+  <script src="js/entities/projectile.js"></script>
+  <!-- defesas: base primeiro, depois um arquivo por tipo -->
+  <script src="js/entities/defenses/defense.js"></script>
+  <script src="js/entities/defenses/cannon.js"></script>
+  <script src="js/entities/defenses/laser.js"></script>
+  <script src="js/entities/defenses/missile.js"></script>
+  <script src="js/entities/defenses/shield.js"></script>
+  <script src="js/entities/defenses/emp.js"></script>
+  <script src="js/entities/defenses/repair.js"></script>
+  <script src="js/entities/defenses/tesla.js"></script>
+  <script src="js/entities/defenses/railgun.js"></script>
+  <script src="js/entities/defenses/drones.js"></script>
+  <script src="js/entities/defenses/gravity.js"></script>
+  <script src="js/entities/defenses/mines.js"></script>
+  <script src="js/entities/defenses/artillery.js"></script>
+  <script src="js/entities/defenses/nanites.js"></script>
+  <script src="js/entities/defenses/amplifier.js"></script>
+  <script src="js/entities/defenses/miner.js"></script>
+  <script src="js/entities/defenses/ion.js"></script>
+  <!-- inimigos: base primeiro, depois um arquivo por tipo -->
+  <script src="js/entities/enemies/enemy.js"></script>
+  <script src="js/entities/enemies/asteroid.js"></script>
+  <script src="js/entities/enemies/fighter.js"></script>
+  <script src="js/entities/enemies/bomber.js"></script>
+  <script src="js/entities/enemies/kamikaze.js"></script>
+  <script src="js/entities/enemies/boss.js"></script>
+  <script src="js/entities/enemies/bosses.js"></script>
+  <script src="js/entities/enemies/freighter.js"></script>
+  <script src="js/systems/damage.js"></script>
+  <script src="js/systems/bonuses.js"></script>
+  <script src="js/systems/economy.js"></script>
+  <script src="js/systems/combat.js"></script>
+  <script src="js/systems/waves.js"></script>
+  <script src="js/systems/cards.js"></script>
+  <script src="js/systems/mutations.js"></script>
+  <script src="js/systems/spaceEvents.js"></script>
+  <script src="js/systems/missions.js"></script>
+  <script src="js/systems/threat.js"></script>
+  <script src="js/systems/achievements.js"></script>
+  <script src="js/systems/abilities.js"></script>
+  <script src="js/render/placeholders.js"></script>
+  <script src="js/render/sprites.js"></script>
+  <script src="js/render/renderer.js"></script>
+  <script src="js/ui/uiutil.js"></script>
+  <script src="js/ui/hud.js"></script>
+  <script src="js/ui/panel.js"></script>
+  <script src="js/ui/planetPanel.js"></script>
+  <script src="js/ui/cardScreen.js"></script>
+  <script src="js/ui/lab.js"></script>
+  <script src="js/ui/screens.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
